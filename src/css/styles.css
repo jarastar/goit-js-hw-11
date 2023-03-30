@@ -78,6 +78,7 @@ button {
 }
 
 .photo-card .photo-img {
+  display: block;
   height: 200px;
   width: 100%;
   object-fit: cover;
@@ -90,7 +91,8 @@ button {
   align-items: center;
   justify-content: space-between;
   padding: 15px;
-  background-color: #f4d6b0;
+  color: #fff;
+  background-color: rgba(0, 0, 0, 0.7);
 }
 
 .photo-card .info-item {
