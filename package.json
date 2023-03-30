@@ -4,9 +4,8 @@
   "description": "",
   "homepage": "https://jarastar.github.io/goit-js-hw-11",
   "scripts": {
-    "start": "parcel ./src/index.html",
-  "build": "parcel build ./src/index.html",
-  "dev": "parcel ./src/index.html"
+    "start": "parcel src/*.html",
+    "build": "parcel build src/*.html --public-url /goit-js-hw-11/"
   },
   "repository": {
     "type": "git",
