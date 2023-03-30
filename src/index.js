@@ -21,7 +21,7 @@ const options = {
 };
 const observer = new IntersectionObserver(onLoadMore, options);
 
-async function onSearch(event) {
+function onSearch(event) {
   event.preventDefault();
 
   elements.gallery.innerHTML = '';
@@ -34,7 +34,8 @@ async function onSearch(event) {
   }
 
   shownImagesCount = 0;
-  await fetchGallery();
+  elements.loadMore.classList.add('is-hidden');
+  fetchGallery();
 }
 
 function onLoadMore() {
@@ -61,11 +62,13 @@ async function fetchGallery() {
 
   if (shownImagesCount < total) {
     Notify.success(`Hooray! We found ${total} images !!!`);
-    elements.loadMore.classList.remove('is-hidden');
+    elements.loadMore.classList.remove('is-hidden'); // видаляємо клас "is-hidden"
   }
 
   if (shownImagesCount >= total) {
     Notify.info("We're sorry, but you've reached the end of the search results.");
+    elements.loadMore.classList.add('is-hidden');
+    return;
   }
 }
 
@@ -98,4 +101,3 @@ function renderGallery(hits) {
   elements.gallery.insertAdjacentHTML('beforeend', markup);
   lightbox.refresh();
 }
-

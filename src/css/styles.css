@@ -139,15 +139,19 @@ button {
   margin: 20px auto;
   padding: 10px 20px;
   background-color: #f27261;
-  color: #fff;
+  color: black;
   text-align: center;
   text-decoration: none;
   font-size: 16px;
   font-weight: bold;
   border-radius: 5px;
 }
-
-.load-more:hover {
+.load-more:hover,
+.load-more:focus {
   background-color: #f4d6b0;
   cursor: pointer;
+}
+
+.load-more.is-hidden {
+  display: none;
 }
