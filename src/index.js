@@ -1,99 +1,101 @@
-import axios from "axios";
-import Notiflix from "notiflix";
-import debounce from "lodash.debounce";
+import {NewsApiService} from './js/pixApi';
+import { lightbox } from './js/libox';
+import { Notify } from 'notiflix';
 
-const API_KEY = "34864216-4fa8cf27ab1b277ad0c21156c";
-const BASE_URL = "https://pixabay.com/api/";
+const elements = {
+  form: document.querySelector('.search-form'),
+  gallery: document.querySelector('.gallery'),
+  loadMore: document.querySelector('.load-more')
+};
 
-const galleryRef = document.querySelector(".gallery");
-const searchFormRef = document.querySelector(".search-form");
-const loadMoreBtnRef = document.querySelector(".load-more");
-const PER_PAGE = 40;
-let currentPage = 1;
-let searchQuery = "";
+let shownImagesCount = 0;
+const apiService = new NewsApiService();
 
-searchFormRef.addEventListener("submit", searchFormSubmitHandler);
-loadMoreBtnRef.addEventListener("click", loadMoreBtnClickHandler);
+elements.form.addEventListener('submit', onSearch);
+elements.loadMore.addEventListener('click', onLoadMore);
 
-async function fetchImages(query, page, perPage) {
-  const url = `${BASE_URL}?key=${API_KEY}&q=${query}&image_type=photo&orientation=horizontal&safesearch=true&page=${page}&per_page=${perPage}`;
-  const response = await axios.get(url);
-  const { hits, totalHits } = response.data;
-  return { hits, totalHits };
-}
+const options = {
+  rootMargin: '50px',
+  root: null,
+  threshold: 0.3,
+};
+const observer = new IntersectionObserver(onLoadMore, options);
 
-async function searchFormSubmitHandler(e) {
-  e.preventDefault();
-  searchQuery = e.currentTarget.elements.searchQuery.value.trim();
-  if (!searchQuery) {
-    return Notiflix.Notify.failure("Sorry, enter search query!");
+async function onSearch(event) {
+  event.preventDefault();
+
+  elements.gallery.innerHTML = '';
+  apiService.query = event.currentTarget.elements.searchQuery.value.trim();
+  apiService.resetPage();
+
+  if (apiService.query === '') {
+    Notify.warning('Please, fill in the search field');
+    return;
   }
-  currentPage = 1;
-  galleryRef.innerHTML = "";
-  loadMoreBtnRef.classList.add("is-hidden");
 
-  try {
-    const images = await fetchImages(searchQuery, currentPage, PER_PAGE);
-    if (images.hits.length === 0) {
-      return Notiflix.Notify.failure(
-        `Sorry, there are no images matching your search query "${searchQuery}"!`
-      );
-    }
-    appendImagesMarkup(images);
-    if (images.hits.length < PER_PAGE) {
-      loadMoreBtnRef.classList.add("is-hidden");
-    } else {
-      loadMoreBtnRef.classList.remove("is-hidden");
-    }
-    Notiflix.Notify.success(`Hooray! We found ${images.totalHits} images.`);
-  } catch (error) {
-    Notiflix.Notify.failure("Oops, something went wrong! Try again later.");
+  shownImagesCount = 0;
+  await fetchGallery();
+}
+
+function onLoadMore() {
+  apiService.incrementPage();
+  fetchGallery();
+}
+
+async function fetchGallery() {
+  elements.loadMore.classList.add('is-hidden');
+
+  const response = await apiService.fetchGallery();
+  const { hits, total } = response;
+  shownImagesCount += hits.length;
+
+  if (!hits.length) {
+    Notify.failure(
+      'Sorry, there are no images matching your search query. Please try again.'
+    );
+    elements.loadMore.classList.add('is-hidden');
+    return;
+  }
+
+  renderGallery(hits);
+
+  if (shownImagesCount < total) {
+    Notify.success(`Hooray! We found ${total} images !!!`);
+    elements.loadMore.classList.remove('is-hidden');
+  }
+
+  if (shownImagesCount >= total) {
+    Notify.info("We're sorry, but you've reached the end of the search results.");
   }
 }
 
-async function loadMoreBtnClickHandler() {
-  currentPage += 1;
-  const images = await fetchImages(searchQuery, currentPage, PER_PAGE);
-  appendImagesMarkup(images);
-  if (images.hits.length < PER_PAGE) {
-    loadMoreBtnRef.classList.add("is-hidden");
-  } else {
-    loadMoreBtnRef.classList.remove("is-hidden");
-  }
-  window.scrollTo({
-    top: document.documentElement.scrollHeight,
-    behavior: "smooth",
-  });
+function renderGallery(hits) {
+  const markup = hits.map(({ webformatURL, largeImageURL, tags, likes, views, comments, downloads }) => `
+    <div class="photo-card">
+      <a href="${largeImageURL}">
+        <img class="photo-img" src="${webformatURL}" alt="${tags}" loading="lazy" />
+      </a>
+      <div class="info">
+        <p class="info-item">
+          <b>Likes</b>
+          ${likes}
+        </p>
+        <p class="info-item">
+          <b>Views</b>
+          ${views}
+        </p>
+        <p class="info-item">
+          <b>Comments</b>
+          ${comments}
+        </p>
+        <p class="info-item">
+          <b>Downloads</b>
+          ${downloads}
+        </p>
+      </div>
+    </div>`
+  ).join('');
+  elements.gallery.insertAdjacentHTML('beforeend', markup);
+  lightbox.refresh();
 }
 
-function appendImagesMarkup(images) {
-  galleryRef.insertAdjacentHTML(
-    "beforeend",
-    images.hits
-      .map(
-        ({ webformatURL, largeImageURL, tags, likes, views, comments, downloads }) =>
-          `<div class="photo-card">
-            <img src="${webformatURL}" data-source="${largeImageURL}" alt="${tags}" class="photo-card__image" />
-            <div class="photo-card__description">
-              <p class="photo-card__item">
-                <i class="material-icons photo-card__icon">thumb_up</i>
-                <span class="photo-card__text">${likes}</span>
-              </p>
-              <p class="photo-card__item">
-                <i class="material-icons photo-card__icon">visibility</i>
-                <span class="photo-card__text">${views}</span>
-              </p>
-              <p class="photo-card__item">
-                <i class="material-icons photo-card__icon">comment</i>
-                <span class="photo-card__text">${comments}</span>
-              </p>
-              <p class="photo-card__item">
-                <i class="material-icons photo-card__icon">cloud_download</i>
-                <span class="photo-card__text">${downloads}</span>
-              </p>
-            </div>
-          </div>`
-      )
-      .join("")
-  );
-}

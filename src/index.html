@@ -3,27 +3,30 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Page title</title>
     <link rel="stylesheet" href="./css/styles.css" />
-    <script type="module" src="./index.js"></script>
+    <script src="./index.js" type="module"></script>
+    <title>Gallery search</title>
   </head>
   <body>
-    <header>
-      <h1>Image Gallery</h1>
-    </header>
-    <main>
-      <form class="search-form" id="search-form">
-        <input
-          type="text"
-          name="searchQuery"
-          autocomplete="off"
-          placeholder="Search images..."
-        />
-        <button type="submit">Search</button>
-      </form>
-      <div class="gallery">
-        <!-- Картки зображень -->
-      </div>
-    </main>
+    <h1 class="search-title">Search images</h1>
+    <form class="search-form" id="search-form">
+      <a href="https://pixabay.com/" target="_blank"> </a>
+      <input
+        class="search-form__input"
+        type="text"
+        name="searchQuery"
+        autocomplete="off"
+        placeholder="Search images..."
+      />
+      <button class="search-form__button" type="submit"></button>
+    </form>
+
+    <div class="gallery"></div>
+
+    <div class="preloader is-hidden">
+      <div class="loader"></div>
+    </div>
+
+    <button type="button" class="load-more is-hidden">Load more</button>
   </body>
 </html>
